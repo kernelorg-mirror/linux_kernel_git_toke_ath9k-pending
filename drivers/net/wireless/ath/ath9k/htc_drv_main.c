@@ -1569,6 +1569,9 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
 			priv->cur_beacon_conf.enable_beacon = 0;
 			ath9k_htc_beacon_config(priv, vif);
 		}
+
+		if (priv->csa_vif == vif && !bss_conf->csa_active)
+			priv->csa_vif = NULL;
 	}
 
 	if (changed & BSS_CHANGED_BEACON_INT) {
