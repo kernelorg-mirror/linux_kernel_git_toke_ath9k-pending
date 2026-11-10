@@ -92,7 +92,8 @@ static void ath_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
 	struct ieee80211_sta *sta = info->status.status_driver_data[0];
 
 	if (info->flags & (IEEE80211_TX_CTL_REQ_TX_STATUS |
-			   IEEE80211_TX_STATUS_EOSP)) {
+			   IEEE80211_TX_STATUS_EOSP |
+			   IEEE80211_TX_STAT_TX_FILTERED)) {
 		ieee80211_tx_status_skb(hw, skb);
 		return;
 	}
@@ -2474,7 +2475,8 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
 			tx_info->flags |= IEEE80211_TX_STAT_ACK;
 	}
 
-	if (tx_info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS) {
+	if (tx_info->flags & (IEEE80211_TX_CTL_REQ_TX_STATUS |
+			      IEEE80211_TX_STAT_TX_FILTERED)) {
 		padpos = ieee80211_hdrlen(hdr->frame_control);
 		padsize = padpos & 3;
 		if (padsize && skb->len>padpos+padsize) {
