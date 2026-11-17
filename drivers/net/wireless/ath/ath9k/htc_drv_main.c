@@ -888,17 +888,18 @@ static void ath9k_htc_tx(struct ieee80211_hw *hw,
 		goto fail_tx;
 	}
 
+	ath9k_htc_check_stop_queues(priv);
+
 	ret = ath9k_htc_tx_start(priv, control->sta, skb, slot, false);
 	if (ret != 0) {
 		ath_dbg(common, XMIT, "Tx failed\n");
 		goto clear_slot;
 	}
 
-	ath9k_htc_check_stop_queues(priv);
-
 	return;
 
 clear_slot:
+	__ath9k_htc_check_wake_queues(priv, true);
 	ath9k_htc_tx_clear_slot(priv, slot);
 fail_tx:
 	dev_kfree_skb_any(skb);

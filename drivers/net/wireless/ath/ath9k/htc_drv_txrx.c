@@ -65,15 +65,22 @@ void ath9k_htc_check_stop_queues(struct ath9k_htc_priv *priv)
 	spin_unlock_bh(&priv->tx.tx_lock);
 }
 
-void ath9k_htc_check_wake_queues(struct ath9k_htc_priv *priv)
+void __ath9k_htc_check_wake_queues(struct ath9k_htc_priv *priv, bool decrement)
 {
 	spin_lock_bh(&priv->tx.tx_lock);
+	if (decrement)
+		priv->tx.queued_cnt--;
 	if ((priv->tx.queued_cnt < ATH9K_HTC_TX_THRESHOLD) &&
 	    (priv->tx.flags & ATH9K_HTC_OP_TX_QUEUES_STOP)) {
 		priv->tx.flags &= ~ATH9K_HTC_OP_TX_QUEUES_STOP;
 		ieee80211_wake_queues(priv->hw);
 	}
 	spin_unlock_bh(&priv->tx.tx_lock);
+}
+
+void ath9k_htc_check_wake_queues(struct ath9k_htc_priv *priv)
+{
+	__ath9k_htc_check_wake_queues(priv, false);
 }
 
 int ath9k_htc_tx_get_slot(struct ath9k_htc_priv *priv)
