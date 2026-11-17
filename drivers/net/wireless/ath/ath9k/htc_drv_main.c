@@ -971,7 +971,7 @@ static int ath9k_htc_start(struct ieee80211_hw *hw)
 
 	mutex_unlock(&priv->mutex);
 
-	return ret;
+	return 0;
 }
 
 static void ath9k_htc_stop(struct ieee80211_hw *hw, bool suspend)
