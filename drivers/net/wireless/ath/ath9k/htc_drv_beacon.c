@@ -188,6 +188,18 @@ static void ath9k_htc_send_buffered(struct ath9k_htc_priv *priv,
 	spin_unlock_bh(&priv->beacon_lock);
 }
 
+static bool ath9k_htc_csa_is_finished(struct ieee80211_vif *vif)
+{
+	if (!vif->bss_conf.csa_active)
+		return false;
+
+	if (!ieee80211_beacon_cntdwn_is_complete(vif, 0))
+		return false;
+
+	ieee80211_csa_finish(vif, 0);
+	return true;
+}
+
 static void ath9k_htc_send_beacon(struct ath9k_htc_priv *priv,
 				  int slot)
 {
@@ -210,6 +222,11 @@ static void ath9k_htc_send_beacon(struct ath9k_htc_priv *priv,
 	avp = (struct ath9k_htc_vif *)vif->drv_priv;
 
 	if (unlikely(test_bit(ATH_OP_SCANNING, &common->op_flags))) {
+		spin_unlock_bh(&priv->beacon_lock);
+		return;
+	}
+
+	if (ath9k_htc_csa_is_finished(vif)) {
 		spin_unlock_bh(&priv->beacon_lock);
 		return;
 	}
@@ -258,7 +275,7 @@ static void ath9k_htc_send_beacon(struct ath9k_htc_priv *priv,
 
 	spin_unlock_bh(&priv->beacon_lock);
 
-	ath9k_htc_csa_is_finished(priv);
+	ath9k_htc_csa_is_finished(vif);
 }
 
 static int ath9k_htc_choose_bslot(struct ath9k_htc_priv *priv,
@@ -507,21 +524,4 @@ void ath9k_htc_beacon_reconfig(struct ath9k_htc_priv *priv)
 		ath_dbg(common, CONFIG, "Unsupported beaconing mode\n");
 		return;
 	}
-}
-
-bool ath9k_htc_csa_is_finished(struct ath9k_htc_priv *priv)
-{
-	struct ieee80211_vif *vif;
-
-	vif = priv->csa_vif;
-	if (!vif || !vif->bss_conf.csa_active)
-		return false;
-
-	if (!ieee80211_beacon_cntdwn_is_complete(vif, 0))
-		return false;
-
-	ieee80211_csa_finish(vif, 0);
-
-	priv->csa_vif = NULL;
-	return true;
 }

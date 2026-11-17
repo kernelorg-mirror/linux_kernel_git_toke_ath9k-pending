@@ -1136,9 +1136,6 @@ static void ath9k_htc_remove_interface(struct ieee80211_hw *hw,
 	priv->nvifs--;
 	priv->vif_slot &= ~(1 << avp->index);
 
-	if (priv->csa_vif == vif)
-		priv->csa_vif = NULL;
-
 	ath9k_htc_remove_station(priv, vif, NULL);
 
 	DEC_VIF(priv, vif->type);
@@ -1570,9 +1567,6 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
 			priv->cur_beacon_conf.enable_beacon = 0;
 			ath9k_htc_beacon_config(priv, vif);
 		}
-
-		if (priv->csa_vif == vif && !bss_conf->csa_active)
-			priv->csa_vif = NULL;
 	}
 
 	if (changed & BSS_CHANGED_BEACON_INT) {
@@ -1862,19 +1856,6 @@ static int ath9k_htc_get_antenna(struct ieee80211_hw *hw, int radio_idx,
 	return 0;
 }
 
-static void ath9k_htc_channel_switch_beacon(struct ieee80211_hw *hw,
-					    struct ieee80211_vif *vif,
-					    struct cfg80211_chan_def *chandef)
-{
-	struct ath9k_htc_priv *priv = hw->priv;
-
-	/* mac80211 does not support CSA in multi-if cases (yet) */
-	if (WARN_ON(priv->csa_vif))
-		return;
-
-	priv->csa_vif = vif;
-}
-
 struct ieee80211_ops ath9k_htc_ops = {
 	.add_chanctx = ieee80211_emulate_add_chanctx,
 	.remove_chanctx = ieee80211_emulate_remove_chanctx,
@@ -1906,7 +1887,6 @@ struct ieee80211_ops ath9k_htc_ops = {
 	.set_bitrate_mask   = ath9k_htc_set_bitrate_mask,
 	.get_stats	    = ath9k_htc_get_stats,
 	.get_antenna	    = ath9k_htc_get_antenna,
-	.channel_switch_beacon	= ath9k_htc_channel_switch_beacon,
 
 #ifdef CONFIG_ATH9K_HTC_DEBUGFS
 	.get_et_sset_count  = ath9k_htc_get_et_sset_count,
