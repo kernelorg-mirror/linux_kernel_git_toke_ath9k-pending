@@ -902,7 +902,7 @@ clear_slot:
 	__ath9k_htc_check_wake_queues(priv, true);
 	ath9k_htc_tx_clear_slot(priv, slot);
 fail_tx:
-	dev_kfree_skb_any(skb);
+	ieee80211_free_txskb(hw, skb);
 }
 
 static int ath9k_htc_start(struct ieee80211_hw *hw)
